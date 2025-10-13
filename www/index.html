@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>paifu_gen</title>
+</head>
+
+<body>
+    <div style="width: 640px; height: 640px; overflow: hidden;">
+        <iframe id="log-viewer-frame" src='./log-viewer/index.html?mjai_log=[{"type"%3A"start_game"%2C"id"%3A0%2C"names"%3A[""%2C""%2C""%2C""]%2C"kyoku_first"%3A1%2C"aka_flag"%3Afalse}%2C{"type"%3A"start_kyoku"%2C"bakaze"%3A"E"%2C"dora_marker"%3A"1p"%2C"kyoku"%3A1%2C"honba"%3A0%2C"kyotaku"%3A0%2C"oya"%3A0%2C"scores"%3A[25000%2C25000%2C25000%2C25000]%2C"tehais"%3A[["1m"%2C"1m"%2C"1m"%2C"2m"%2C"3m"%2C"4m"%2C"5m"%2C"6m"%2C"7m"%2C"8m"%2C"9m"%2C"9m"%2C"9m"]%2C["1m"%2C"2m"%2C"2m"%2C"2m"%2C"3m"%2C"3m"%2C"3m"%2C"4m"%2C"4m"%2C"4m"%2C"5m"%2C"5m"%2C"6m"]%2C["6m"%2C"6m"%2C"7m"%2C"7m"%2C"7m"%2C"8m"%2C"8m"%2C"8m"%2C"1p"%2C"1p"%2C"1p"%2C"2p"%2C"2p"]%2C["2p"%2C"2p"%2C"3p"%2C"3p"%2C"3p"%2C"3p"%2C"4p"%2C"4p"%2C"4p"%2C"4p"%2C"5p"%2C"5p"%2C"5p"]]}%2C{"type"%3A"tsumo"%2C"actor"%3A0%2C"pai"%3A"9m"}%2C{"type"%3A"dahai"%2C"actor"%3A0%2C"pai"%3A"9m"%2C"tsumogiri"%3Atrue}]' width="1265" height="1265" scrolling="no"
+            style="transform: scale(0.5); transform-origin: 0 0; border: 20;"></iframe>
+    </div>
+    <section>
+        <div>
+            <input id="kyoku" placeholder="kyoku (S2)" />
+            <input id="jikaze" placeholder="jikaze (N)" />
+            <input id="kyotaku" placeholder="kyotaku (2)" />
+            <input id="honba" placeholder="honba (3)" />
+        </div>
+        <div>
+            <input id="dora" placeholder="dora (3m7z)" />
+        </div>
+        <div>
+            <input id="score-hero" placeholder="score-hero (25000)" />
+            <input id="score-shimocha" placeholder="score-shimocha (25000)" />
+            <input id="score-toimen" placeholder="score-toimen (25000)" />
+            <input id="score-kamicha" placeholder="score-kamicha (25000)" />
+        </div>
+        <div>
+            <input id="tehai" placeholder="tehai (123m06799s333z)" style="width:420px" />
+        </div>
+        <div>
+            <input id="kawa-hero" placeholder="kawa-hero (1m.9p0s-)" />
+            <input id="kawa-shimocha" placeholder="kawa-shimocha (1m.9p0s-)" />
+            <input id="kawa-toimen" placeholder="kawa-toimen (1m.9p0s-)" />
+            <input id="kawa-kamicha" placeholder="kawa-kamicha (1m.9p0s-)" />
+        </div>
+        <div>
+            <input id="fuuro-hero" placeholder="fuuro-hero ((2m)3m4m)" />
+            <input id="fuuro-shimocha" placeholder="fuuro-shimocha (1z(1z)1z)" />
+            <input id="fuuro-toimen" placeholder="fuuro-toimen (5z5z5z5z)" />
+            <input id="fuuro-kamicha" placeholder="fuuro-kamicha (7z7z(7z)(7z))" />
+        </div>
+        <div style="margin-top:8px">
+            <button id="generate-board">Generate</button>
+        </div>
+        <pre id="tenhou-json"></pre>
+        <iframe id="tenhou-frame" class="tenhou" loading="lazy" scrolling="no" marginwidth="0" marginheight="0"
+            frameborder="0" style="width:100%; height:600px;"></iframe>
+    </section>
+
+    <script type="module">
+        import init, { generate_logs_js } from "./pkg/paifu_gen.js";
+
+        async function run() {
+            await init();
+
+            document.getElementById("generate-board").addEventListener("click", () => {
+                const toVal = id => document.getElementById(id).value || "";
+
+                const raw = {
+                    kyoku: toVal('kyoku'),
+                    jikaze: toVal('jikaze'),
+                    kyotaku: toVal('kyotaku'),
+                    honba: toVal('honba'),
+                    dora: toVal('dora'),
+                    scores: [
+                        toVal('score-hero'),
+                        toVal('score-shimocha'),
+                        toVal('score-toimen'),
+                        toVal('score-kamicha')
+                    ],
+                    tehai: toVal('tehai'),
+                    kawa: [
+                        toVal('kawa-hero'),
+                        toVal('kawa-shimocha'),
+                        toVal('kawa-toimen'),
+                        toVal('kawa-kamicha')
+                    ],
+                    fuuro: [
+                        toVal('fuuro-hero'),
+                        toVal('fuuro-shimocha'),
+                        toVal('fuuro-toimen'),
+                        toVal('fuuro-kamicha')
+                    ]
+                };
+
+                try {
+                    const generated = generate_logs_js(raw);
+
+                    document.getElementById('tenhou-json').textContent = generated.tenhou_log;
+    
+
+                    const log_iframe = document.getElementById("log-viewer-frame");
+                    const encoded_mjai = encodeURIComponent(JSON.stringify(generated.mjai_log));
+                    log_iframe.src = `./log-viewer/index.html?mjai_log=${encoded_mjai}`;
+
+                    const tenhou_iframe = document.getElementById('tenhou-frame');
+                    const encoded_tenhou = encodeURIComponent(generated.tenhou_log);
+                    tenhou_iframe.src = `https://tenhou.net/5/?tw=${generated.player_id}&_=${Date.now()}#json=${encoded_tenhou}`;
+                } catch (err) {
+                    document.getElementById('tenhou-json').textContent = 'Error: ' + err;
+                }
+            });
+        }
+
+        run();
+    </script>
+</body>
+
+</html>
