@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "build:wasm": "npx wasm-pack build --target web --out-dir ./www/pkg --out-name paifu_gen",
-        "start": "npx http-server ./www -c-1 -p 8080",
+        "start": "npx http-server ./www -c 60 -p 8080",
         "dev": "npm run build:wasm && npm run start"
     },
     "devDependencies": {}
